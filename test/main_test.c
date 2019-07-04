@@ -35,5 +35,5 @@ TEST(database_new_unreadable) {
   close(fd);
 
   database_t *database = database_new();
-  assert(database != NULL);
+  assert(database == NULL);
 }
