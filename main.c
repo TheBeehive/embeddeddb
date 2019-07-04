@@ -110,18 +110,13 @@ transaction_t *start_read_write_transaction(database_t *database)
 	transaction->page = get_page_number(st.st_size);
 	transaction->data = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
 			MAP_SHARED, database->fd, st.st_size);
-	// TODO: this doesn't work because I throw away the pointer to
-	// transaction->data when I commit or cancel a transaction, so the
-	// active_page may or may not be mapped, and, if it is mapped, I don't have
-	// a valid pointer to it and no guarantees that the file offset num bytes
-	// added to the original mapped memory when I made the database would
-	// actually give me a valid memory address which points to the active page
-	// in memory
-	// I can either keep updating database->file to point to the active_page
-	// or I can remap active_page from the file to a valid place in memory when
-	// I need it
-	char *active_page = (char *) database->file + get_page_offset(database->file->active_page);
+	// TODO: should I instead keep updating database->file to point to the active_page
+	// instead of remapping active_page from the file to a valid place in memory when
+	// I need it?
+	char *active_page = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED, database->fd, get_page_offset(database->file->active_page));
 	memcpy(transaction->data, active_page, PAGE_SIZE);
+	r = munmap(active_page, PAGE_SIZE);
 	return transaction;
 }
 
