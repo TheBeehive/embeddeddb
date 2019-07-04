@@ -93,12 +93,12 @@ int main(int argc, char *argv[]) {
   for (size_t i = 0; i < mx_vector_length(v_test); i++) {
     test_t *test = v_test + i;
 
-    printf("%s:%zu:%s():", test->file, test->line, test->name);
+    fprintf(stderr, "%s:%zu:%s():", test->file, test->line, test->name);
 
     if (test_execute(test)) {
-      printf(" [PASSED]\n");
+      fprintf(stderr, " [PASSED]\n");
     } else {
-      printf(" [FAILED]\n");
+      fprintf(stderr, " [FAILED]\n");
       fail = true;
     }
   }
