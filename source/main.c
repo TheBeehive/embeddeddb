@@ -4,12 +4,6 @@
 #include "database.h"
 
 
-// implement garbage collection
-// add refcount array to database object
-// index is page number
-// reads will increment it
-// writes will loop through it to find the first zero refcount and then use that
-// instead of what they are using now 
 int main(void)
 {
 	database_t *db = database_new();

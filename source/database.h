@@ -21,7 +21,9 @@ typedef enum TRANSACTION_MODE
 typedef struct transaction_t
 {
 	void *data;
-	size_t page;
+	size_t write_page;
+	size_t read_page;
+	TRANSACTION_MODE tm;
 } transaction_t;
 
 database_t *database_new();
