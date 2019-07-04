@@ -1,6 +1,7 @@
 # Output
 
 embeddeddb
+main_test
 
 # C
 
@@ -49,6 +50,8 @@ embeddeddb
 *.pdb
 
 # CMake
+
+DartConfiguration.tcl
 
 CMakeLists.txt.user
 CMakeCache.txt
