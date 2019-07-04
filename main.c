@@ -147,7 +147,7 @@ int main(void)
 {
 	database_t *db = database_new();
 	transaction_t *transaction = start_transaction(db, TRANSACTION_MODE_WRITE);
-	strcpy((char *)transaction->page, "something");
+	strcpy((char *)transaction->data, "something");
 	commit_transaction(db, transaction);
 	database_close(db);
 
