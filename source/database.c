@@ -28,8 +28,11 @@ static transaction_t *start_read_transaction(database_t *database)
 {
 	transaction_t *transaction = malloc(sizeof(transaction_t));
 	transaction->read_page = database->file->active_page;
-	transaction->data = (char *) database->file + get_page_offset(database->file->active_page);
+
 	database->refcount[transaction->read_page] += 1;
+	transaction->data = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED, database->fd, get_page_offset(transaction->read_page));
+
 	return transaction;
 }
 
@@ -143,10 +146,14 @@ database_t *database_new()
 		database->refcount[i] = 0;
 	}
 
-    database->fd = open("/tmp/example", O_RDWR | O_CREAT, 0666);
+	// TODO: handle error
+	// TODO: make filename user-provided but with default
+    database->fd = open("/tmp/example2", O_RDWR | O_CREAT, 0666);
 
+	// TODO: handle bad case
     int r = ftruncate(database->fd, PAGE_SIZE * 2);
 
+	// TODO: check if successful
 	database->file = mmap(NULL, PAGE_SIZE * 2, PROT_READ | PROT_WRITE,
 			MAP_SHARED, database->fd, 0);
 
