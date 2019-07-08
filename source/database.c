@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -10,9 +11,15 @@
 #define PAGE_SIZE (getpagesize())
 #define NUM_VERSIONS_INIT 100
 
-// XXX: refcount array should be more dynamic?
 
 // TODO: improve error handling instead of just exit(1) and do cleanup
+// TODO: thread-safety -- make some stuff single-threaded; also, add atomics and
+// mutexes to stuff that is potentially multi-threaded
+// TODO: make refcount array a vector
+// TODO: only ftruncate periodically and synchronize refcount array
+// TODO: mmap less (it is slow)
+
+// TODO: if going more than 1page, use binary tree
 
 struct database_file_t
 {
