@@ -12,6 +12,8 @@
 
 // XXX: refcount array should be more dynamic?
 
+// TODO: improve error handling instead of just exit(1) and do cleanup
+
 struct database_file_t
 {
 	size_t active_page;
@@ -152,15 +154,19 @@ database_t *database_new(char *filename)
 		database->refcount[i] = 0;
 	}
 
-	// TODO: handle error
-    database->fd = open(filename, O_RDWR | O_CREAT, 0666);
+	int fd = open(filename, O_RDWR | O_CREAT, 0666);
+	if (fd < 0)
+		exit(1);
+	database->fd = fd;
 
-	// TODO: handle bad case
     int r = ftruncate(database->fd, PAGE_SIZE * 2);
+	if (r == -1)
+		exit(1);
 
-	// TODO: check if successful
 	database->file = mmap(NULL, PAGE_SIZE * 2, PROT_READ | PROT_WRITE,
 			MAP_SHARED, database->fd, 0);
+	if (database->file == MAP_FAILED)
+		exit(1);
 
 	database->file->active_page = 1;
 
