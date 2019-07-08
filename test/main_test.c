@@ -12,7 +12,7 @@
 TEST(database_new_normal) {
   assert(unlink("/tmp/example") == 0 || errno == ENOENT);
 
-  database_t *database = database_new();
+  database_t *database = database_new("/tmp/example");
 
   assert(access("/tmp/example", F_OK) != -1);
   assert(database != NULL);
@@ -24,7 +24,7 @@ TEST(database_new_readable) {
   int fd = open("/tmp/example", O_RDWR | O_CREAT | O_EXCL, 0644);
   close(fd);
 
-  database_t *database = database_new();
+  database_t *database = database_new("/tmp/example");
   assert(database != NULL);
 }
 
@@ -34,6 +34,6 @@ TEST(database_new_unreadable) {
   int fd = open("/tmp/example", O_RDWR | O_CREAT | O_EXCL, 0000);
   close(fd);
 
-  database_t *database = database_new();
+  database_t *database = database_new("/tmp/example");
   assert(database == NULL);
 }

@@ -10,7 +10,7 @@
 #define PAGE_SIZE (getpagesize())
 #define NUM_VERSIONS_INIT 100
 
-// TODO: refcount array should be more dynamic?
+// XXX: refcount array should be more dynamic?
 
 struct database_file_t
 {
@@ -139,7 +139,7 @@ static void cancel_read_write_transaction(database_t *database, transaction_t *t
 	free(transaction);
 }
 
-database_t *database_new()
+database_t *database_new(char *filename)
 {
 	if (PAGE_SIZE < sizeof(database_file_t))
 		exit(1);
@@ -153,8 +153,7 @@ database_t *database_new()
 	}
 
 	// TODO: handle error
-	// TODO: make filename user-provided but with default
-    database->fd = open("/tmp/example2", O_RDWR | O_CREAT, 0666);
+    database->fd = open(filename, O_RDWR | O_CREAT, 0666);
 
 	// TODO: handle bad case
     int r = ftruncate(database->fd, PAGE_SIZE * 2);
@@ -174,7 +173,7 @@ void database_close(database_t *database)
 {
 	int r = munmap(database, PAGE_SIZE);
     printf("munmap(buf1): %i\n", r);
-	// do I need to explicitly free each member of the refcount array?
+	// XXX: do I need to explicitly free each member of the refcount array?
 	free(database);
 }
 

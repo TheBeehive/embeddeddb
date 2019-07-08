@@ -27,7 +27,7 @@ typedef struct transaction_t
 	TRANSACTION_MODE tm;
 } transaction_t;
 
-database_t *database_new();
+database_t *database_new(char *filename);
 void database_close(database_t *database);
 
 transaction_t *start_transaction(database_t *database, TRANSACTION_MODE tm);
