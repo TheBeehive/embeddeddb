@@ -8,6 +8,9 @@
 #include "database.h"
 
 #define PAGE_SIZE (getpagesize())
+#define NUM_VERSIONS_INIT 100
+
+// TODO: refcount array should be more dynamic?
 
 struct database_file_t
 {
@@ -38,7 +41,7 @@ static transaction_t *start_read_transaction(database_t *database)
 
 static void commit_read_transaction(database_t *database, transaction_t *transaction)
 {
-	if (transaction->read_page > 100)
+	if (transaction->read_page > database->num_versions)
 		exit(1);
 	database->refcount[transaction->read_page] -= 1;
 	free(transaction);
@@ -46,7 +49,7 @@ static void commit_read_transaction(database_t *database, transaction_t *transac
 
 static void cancel_read_transaction(database_t *database, transaction_t *transaction)
 {
-	if (transaction->read_page > 100)
+	if (transaction->read_page > database->num_versions)
 		exit(1);
 	database->refcount[transaction->read_page] -= 1;
 	free(transaction);
@@ -58,8 +61,8 @@ static transaction_t *start_write_transaction(database_t *database)
 	int r = fstat(database->fd, &st);
 
 	transaction_t *transaction = malloc(sizeof(transaction_t));
-	transaction->write_page = 101;
-	for (size_t i = 0; i < 100; i++)
+	transaction->write_page = SIZE_MAX;
+	for (size_t i = 0; i < database->num_versions; i++)
 	{
 		if (database->refcount[i] == 0)
 		{
@@ -68,15 +71,17 @@ static transaction_t *start_write_transaction(database_t *database)
 		}
 	}
 
-	if (transaction->write_page == 101)
+	if (transaction->write_page == SIZE_MAX)
 	{
 		/* no available pages. resize the file to have a new page */
 		ftruncate(database->fd, st.st_size + PAGE_SIZE);
 		transaction->write_page = get_page_number(st.st_size);
-		// TODO: change hard-coded 100 and re-size refcount array here if new
-		// page number exceeds 100
-		if (transaction->write_page > 100)
-			exit(1);
+		/* if page number is > 100, will need to resize refcount array */
+		if (transaction->write_page > database->num_versions)
+		{
+			database->num_versions += NUM_VERSIONS_INIT;
+			database->refcount = realloc(database->refcount, database->num_versions);
+		}
 	}
 	
 	off_t offset = get_page_offset(transaction->write_page);
@@ -100,7 +105,7 @@ static void cancel_write_transaction(database_t *database, transaction_t *transa
 
 static transaction_t *start_read_write_transaction(database_t *database)
 {
-	// TODO: should I instead keep updating database->file to point to the active_page
+	// XXX: should I instead keep updating database->file to point to the active_page
 	// instead of remapping active_page from the file to a valid place in memory when
 	// I need it?
 	size_t active_page_num = database->file->active_page;
@@ -120,7 +125,7 @@ static void commit_read_write_transaction(database_t *database, transaction_t *t
 {
 	database->file->active_page = transaction->write_page;
 
-	if (transaction->read_page > 100)
+	if (transaction->read_page > database->num_versions)
 		exit(1);
 	database->refcount[transaction->read_page] -= 1;
 	free(transaction);
@@ -128,7 +133,7 @@ static void commit_read_write_transaction(database_t *database, transaction_t *t
 
 static void cancel_read_write_transaction(database_t *database, transaction_t *transaction)
 {
-	if (transaction->read_page > 100)
+	if (transaction->read_page > database->num_versions)
 		exit(1);
 	database->refcount[transaction->read_page] -= 1;
 	free(transaction);
@@ -140,8 +145,9 @@ database_t *database_new()
 		exit(1);
 
 	database_t *database = malloc(sizeof(database_t));
-	database->refcount = malloc(sizeof(int) * 100);
-	for (size_t i = 0; i < 100; i++)
+	database->num_versions = NUM_VERSIONS_INIT;
+	database->refcount = malloc(sizeof(int) * database->num_versions);
+	for (size_t i = 0; i < database->num_versions; i++)
 	{
 		database->refcount[i] = 0;
 	}

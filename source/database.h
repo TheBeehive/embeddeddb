@@ -9,6 +9,7 @@ typedef struct database_t {
 	database_file_t *file;
 	int fd;
 	int *refcount;
+	size_t num_versions; /* sizeof refcount array */
 } database_t;
 
 typedef enum TRANSACTION_MODE
